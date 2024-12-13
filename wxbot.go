@@ -38,7 +38,6 @@ var client = http.Client{}
 
 func main() {
 	http.HandleFunc("/api/sendMessage", sendMessage)
-	http.HandleFunc("/api/sendMessage1", sendMessage1)
 	getDevices()
 
 	bot.UUIDCallback = openwechat.PrintlnQrcodeUrl
@@ -62,7 +61,7 @@ func main() {
 	bot.MessageHandler = func(msg *openwechat.Message) {
 		if msg.IsText() {
 			if strings.Contains(msg.Content, "发短信") || strings.Contains(msg.Content, "发信") || strings.Contains(msg.Content, "fdx") {
-				fmt.Println(msg.Content)
+				fmt.Printf("收到消息：%s\n", msg.Content)
 				cmd := strings.Split(msg.Content, "\n")
 				phoneNumber := cmd[1]
 				sendTo := cmd[2]
@@ -70,6 +69,7 @@ func main() {
 				for key, value := range phone {
 					if strings.Contains(key, phoneNumber) {
 						url := fmt.Sprintf("http://%s:801/api/sendMessage?number=%s&message=%s", value, sendTo, message)
+						fmt.Println("收到发送短信请求: ", url)
 						HttpGet(url)
 					}
 				}
@@ -80,31 +80,6 @@ func main() {
 	http.ListenAndServe(":802", nil)
 	select {}
 
-}
-
-func sendMessage1(writer http.ResponseWriter, request *http.Request) {
-	body, err := ioutil.ReadAll(request.Body)
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer request.Body.Close()
-	var payload SendMessagePayload
-	err = json.Unmarshal([]byte(body), &payload)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	fmt.Println(payload.Message)
-	fmt.Println(payload.SendTo)
-	fmt.Println(payload.Number)
-	for key, value := range phone {
-		if strings.Contains(key, payload.Number) {
-			fmt.Println(payload.Number, value)
-			url := fmt.Sprintf("http://%s:801/api/sendMessage?number=%s&message=%s", value, payload.SendTo, payload.Message)
-			HttpGet(url)
-
-		}
-	}
 }
 
 func sendMessage(writer http.ResponseWriter, request *http.Request) {
